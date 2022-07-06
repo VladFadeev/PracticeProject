@@ -1,11 +1,10 @@
 package com.example.practiceproject;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import android.content.pm.PackageManager;
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,16 +17,23 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.example.practiceproject.databinding.ActivityMapsBinding;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+
+import java.util.List;
+import java.util.Objects;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    private ActivityMapsBinding binding;
-
     private FusedLocationProviderClient fusedLocationProviderClient;
+    private final PermissionsUtils permissionsUtils = PermissionsUtils.getInstance();
     private boolean locationPermissionGranted;
+    private boolean internetPermissionGranted;
     private Location lastKnownLocation;
     private GoogleMap map;
     private static final String TAG = MapsActivity.class.getSimpleName();
@@ -37,8 +43,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        binding = ActivityMapsBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        setContentView(R.layout.activity_maps);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -58,33 +63,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * installed Google Play services and returned to the app.
      */
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(@NonNull GoogleMap googleMap) {
         map = googleMap;
 
-        getLocationPermission();
+        locationPermissionGranted = permissionsUtils.getLocationPermission(this);
+        internetPermissionGranted = permissionsUtils.getInternetPermission(this);
         updateLocationUI();
+        addMetroMarkers();
+        getDeviceLocation();
+    }
 
+    private void getDeviceLocation() {
         try {
             if (locationPermissionGranted) {
-                Task<Location> locationResult = fusedLocationProviderClient.getLastLocation();
-                locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Location> task) {
-                        if (task.isSuccessful()) {
-                            // Set the map's camera position to the current location of the device.
-                            lastKnownLocation = task.getResult();
-                            if (lastKnownLocation != null) {
-                                map.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                                        new LatLng(lastKnownLocation.getLatitude(),
-                                                lastKnownLocation.getLongitude()), 13));
-                            }
-                        } else {
-                            Log.d(TAG, "Current location is null. Using defaults.");
-                            Log.e(TAG, "Exception: %s", task.getException());
-                            map.moveCamera(CameraUpdateFactory
-                                    .newLatLngZoom(defaultLocation, 15));
-                            map.getUiSettings().setMyLocationButtonEnabled(false);
+                @SuppressLint("MissingPermission") Task<Location> locationResult =
+                        fusedLocationProviderClient.getLastLocation();
+                locationResult.addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        lastKnownLocation = task.getResult();
+                        if (lastKnownLocation != null) {
+                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                                    new LatLng(lastKnownLocation.getLatitude(),
+                                            lastKnownLocation.getLongitude()), 14));
                         }
+                    } else {
+                        Log.d(TAG, "Current location is null. Using defaults.");
+                        Log.e(TAG, "Exception: %s", task.getException());
+                        map.moveCamera(CameraUpdateFactory
+                                .newLatLngZoom(defaultLocation, 15));
+                        map.getUiSettings().setMyLocationButtonEnabled(false);
                     }
                 });
             }
@@ -93,40 +100,56 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void getLocationPermission() {
-        /*
-         * Request location permission, so that we can get the location of the
-         * device. The result of the permission request is handled by a callback,
-         * onRequestPermissionsResult.
-         */
-        if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            locationPermissionGranted = true;
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    1);
-        }
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        locationPermissionGranted = false;
-        if (requestCode
-                == 1) {// If request is cancelled, the result arrays are empty.
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                locationPermissionGranted = true;
-            }
-        } else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (permissions[0]) {
+            case Manifest.permission.ACCESS_FINE_LOCATION:
+                if (!(locationPermissionGranted = permissionsUtils.onRequestPermissionsResult(requestCode, grantResults))) {
+                    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                }
+                updateLocationUI();
+                break;
+            case Manifest.permission.INTERNET:
+                if(!(internetPermissionGranted = permissionsUtils.onRequestPermissionsResult(requestCode, grantResults))) {
+                    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                }
         }
-        updateLocationUI();
     }
 
+    private void addMetroMarkers() {
+        if (internetPermissionGranted) {
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl("https://my-json-server.typicode.com/BeeWhy/metro/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+            MetroAPI metroAPI = retrofit.create(MetroAPI.class);
+            Call<List<Station>> stations = metroAPI.stations();
+            stations.enqueue(new Callback<List<Station>>() {
+                @Override
+                public void onResponse(@NonNull Call<List<Station>> call,
+                                       @NonNull Response<List<Station>> response) {
+
+                    for (Station s : response.body()) {
+                        if (!Objects.equals(s.getName().toLowerCase(), "error")) {
+                            map.addMarker(new MarkerOptions()
+                                    .position(new LatLng(s.getLatitude(), s.getLongitude()))
+                                    .title(s.getName()));
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<List<Station>> call,
+                                      @NonNull Throwable t) {
+                    Log.d("debug","response failed");
+                }
+            });
+        }
+    }
+
+    @SuppressLint("MissingPermission")
     private void updateLocationUI() {
         if (map == null) {
             return;
@@ -139,7 +162,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 map.setMyLocationEnabled(false);
                 map.getUiSettings().setMyLocationButtonEnabled(false);
                 lastKnownLocation = null;
-                getLocationPermission();
+                locationPermissionGranted = permissionsUtils.getLocationPermission(this);
             }
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
