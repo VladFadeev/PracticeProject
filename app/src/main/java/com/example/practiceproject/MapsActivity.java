@@ -8,6 +8,8 @@ import android.annotation.SuppressLint;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -16,39 +18,42 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
-import java.util.List;
-import java.util.Objects;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    private static final PermissionsUtils permissionsUtils = PermissionsUtils.getInstance();
+    private static final RoutesUtil routesUtil = RoutesUtil.getInstance();
+    private static final MetroService metroService = MetroService.getInstance();
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private final PermissionsUtils permissionsUtils = PermissionsUtils.getInstance();
-    private boolean locationPermissionGranted;
-    private boolean internetPermissionGranted;
-    private Location lastKnownLocation;
     private GoogleMap map;
+    private Location lastKnownLocation;
+    private Polyline polyline = null;
     private static final String TAG = MapsActivity.class.getSimpleName();
-    private final LatLng defaultLocation = new LatLng(-33.8523341, 151.2106085);
+    private static final LatLng defaultLocation = new LatLng(53.928566, 27.585802);
+    private static final int CAMERA_ZOOM = 14;
+    private static final String DRIVING = "driving";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_maps);
+
+        BottomSheetBehavior<LinearLayout> behavior = BottomSheetBehavior
+                .from(findViewById(R.id.bottom_sheet));
+        behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
     }
@@ -62,40 +67,63 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+    @SuppressLint("PotentialBehaviorOverride")
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         map = googleMap;
 
-        locationPermissionGranted = permissionsUtils.getLocationPermission(this);
-        internetPermissionGranted = permissionsUtils.getInternetPermission(this);
+        permissionsUtils.getLocationPermission(this);
+        permissionsUtils.getInternetPermission(this);
         updateLocationUI();
-        addMetroMarkers();
-        getDeviceLocation();
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        executorService.submit((Runnable) () -> metroService.addMetroMarkers(map));
+        executorService.submit((Runnable) this::getDeviceLocation);
+        executorService.shutdown();
+        map.setOnMarkerClickListener(marker -> {
+            BottomSheetBehavior<LinearLayout> behavior = BottomSheetBehavior
+                    .from(findViewById(R.id.bottom_sheet));
+            behavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            TextView name = findViewById(R.id.bottom_sheet_peek);
+            name.setText(marker.getTitle());
+            if (polyline != null) {
+                polyline.remove();
+            }
+            polyline = map.addPolyline(routesUtil.drawRoute(
+                    new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude()),
+                    marker.getPosition(), DRIVING));
+            return true;
+        });
+        map.setOnMapClickListener(latLng -> {
+            polyline.remove();
+            BottomSheetBehavior<LinearLayout> behavior = BottomSheetBehavior
+                    .from(findViewById(R.id.bottom_sheet));
+            behavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        });
     }
 
+    @SuppressLint("MissingPermission")
     private void getDeviceLocation() {
         try {
-            if (locationPermissionGranted) {
-                @SuppressLint("MissingPermission") Task<Location> locationResult =
-                        fusedLocationProviderClient.getLastLocation();
+            if (PermissionsUtils.isLocationPermissionGranted()) {
+                Task<Location> locationResult = fusedLocationProviderClient.getLastLocation();
                 locationResult.addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         lastKnownLocation = task.getResult();
                         if (lastKnownLocation != null) {
                             map.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                     new LatLng(lastKnownLocation.getLatitude(),
-                                            lastKnownLocation.getLongitude()), 14));
+                                            lastKnownLocation.getLongitude()), CAMERA_ZOOM));
                         }
                     } else {
                         Log.d(TAG, "Current location is null. Using defaults.");
                         Log.e(TAG, "Exception: %s", task.getException());
                         map.moveCamera(CameraUpdateFactory
-                                .newLatLngZoom(defaultLocation, 15));
+                                .newLatLngZoom(defaultLocation, CAMERA_ZOOM));
                         map.getUiSettings().setMyLocationButtonEnabled(false);
                     }
                 });
             }
-        } catch (SecurityException e)  {
+        } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage(), e);
         }
     }
@@ -104,48 +132,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
+        permissionsUtils.onRequestPermissionsResult(requestCode, grantResults);
         switch (permissions[0]) {
             case Manifest.permission.ACCESS_FINE_LOCATION:
-                if (!(locationPermissionGranted = permissionsUtils.onRequestPermissionsResult(requestCode, grantResults))) {
+                if (!PermissionsUtils.isLocationPermissionGranted()) {
                     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
                 }
                 updateLocationUI();
                 break;
             case Manifest.permission.INTERNET:
-                if(!(internetPermissionGranted = permissionsUtils.onRequestPermissionsResult(requestCode, grantResults))) {
+                if (!PermissionsUtils.isInternetPermissionGranted()) {
                     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
                 }
-        }
-    }
-
-    private void addMetroMarkers() {
-        if (internetPermissionGranted) {
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl("https://my-json-server.typicode.com/BeeWhy/metro/")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-            MetroAPI metroAPI = retrofit.create(MetroAPI.class);
-            Call<List<Station>> stations = metroAPI.stations();
-            stations.enqueue(new Callback<List<Station>>() {
-                @Override
-                public void onResponse(@NonNull Call<List<Station>> call,
-                                       @NonNull Response<List<Station>> response) {
-
-                    for (Station s : response.body()) {
-                        if (!Objects.equals(s.getName().toLowerCase(), "error")) {
-                            map.addMarker(new MarkerOptions()
-                                    .position(new LatLng(s.getLatitude(), s.getLongitude()))
-                                    .title(s.getName()));
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(@NonNull Call<List<Station>> call,
-                                      @NonNull Throwable t) {
-                    Log.d("debug","response failed");
-                }
-            });
         }
     }
 
@@ -155,16 +153,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return;
         }
         try {
-            if (locationPermissionGranted) {
+            if (PermissionsUtils.isLocationPermissionGranted()) {
                 map.setMyLocationEnabled(true);
                 map.getUiSettings().setMyLocationButtonEnabled(true);
             } else {
                 map.setMyLocationEnabled(false);
                 map.getUiSettings().setMyLocationButtonEnabled(false);
                 lastKnownLocation = null;
-                locationPermissionGranted = permissionsUtils.getLocationPermission(this);
+                permissionsUtils.getLocationPermission(this);
             }
-        } catch (SecurityException e)  {
+        } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
         }
     }
