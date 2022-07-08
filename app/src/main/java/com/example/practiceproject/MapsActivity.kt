@@ -14,11 +14,12 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLng as GmsLatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.maps.model.LatLng as MapsLatLng
 import java.time.Instant
 import java.util.concurrent.Executors
 
@@ -71,28 +72,28 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
             } else {
                 behavior.state = BottomSheetBehavior.STATE_COLLAPSED
                 val content = findViewById<TextView>(R.id.bottom_sheet_content)
-                val distanceMatrix = DistanceUtils.getInstance().estimateRouteTime(
+                val distanceMatrix = DistanceUtils.estimateRouteTime(
                     Instant.now(), MAPS_API_KEY,
                     false, null,
-                    com.google.maps.model.LatLng(
+                    MapsLatLng(
                         lastKnownLocation!!.latitude,
                         lastKnownLocation!!.longitude
                     ),
-                    com.google.maps.model.LatLng(
+                    MapsLatLng(
                         marker.position.latitude,
                         marker.position.longitude
                     )
                 )
-                val distance = distanceMatrix.rows[0].elements[0].distance
+                val distance = distanceMatrix!!.rows[0].elements[0].distance
                 name.text = marker.title
                 if (polyline != null) {
                     polyline!!.remove()
                 }
                 polyline = map!!.addPolyline(
                     routesUtils.drawRoute(
-                        LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude),
+                        GmsLatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude),
                         marker.position, MAPS_API_KEY
-                    )
+                    )!!
                 )
                 content.text = distance.humanReadable
             }
@@ -118,7 +119,7 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
                             if (lastKnownLocation != null) {
                                 map!!.moveCamera(
                                     CameraUpdateFactory.newLatLngZoom(
-                                        LatLng(
+                                        GmsLatLng(
                                             lastKnownLocation!!.latitude,
                                             lastKnownLocation!!.longitude
                                         ), CAMERA_ZOOM.toFloat()
@@ -182,10 +183,10 @@ class MapsActivity : FragmentActivity(), OnMapReadyCallback {
 
     companion object {
         private val permissionsUtils = PermissionsUtils.getInstance()
-        private val routesUtils = RoutesUtils.getInstance()
+        private val routesUtils = RoutesUtils
         private val metroService = MetroService.getInstance()
         private val TAG: String = MapsActivity::class.toString()
-        private val defaultLocation = LatLng(53.928566, 27.585802)
+        private val defaultLocation = GmsLatLng(53.928566, 27.585802)
         private const val CAMERA_ZOOM = 14
         private const val MAPS_API_KEY: String = BuildConfig.MAPS_API_KEY
     }
