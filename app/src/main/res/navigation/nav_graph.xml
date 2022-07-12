@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/menu_map">
+    <fragment
+        android:id="@id/menu_map"
+        android:name="com.example.practiceproject.MapFragment"
+        android:label="fragment_map"
+        tools:layout="@layout/fragment_map" >
+        <action
+            android:id="@+id/action_mapFragment_to_settingsFragment"
+            app:destination="@id/menu_settings" />
+        <action
+            android:id="@+id/action_mapFragment_to_stationsFragment"
+            app:destination="@id/menu_stations" />
+    </fragment>
+    <fragment
+        android:id="@id/menu_stations"
+        android:name="com.example.practiceproject.MetroStations"
+        android:label="fragment_metro_stations"
+        tools:layout="@layout/fragment_metro_stations">
+        <action
+            android:id="@+id/action_stationsFragment_to_mapFragment"
+            app:destination="@id/menu_map" />
+        <action
+            android:id="@+id/action_stationsFragment_to_settingsFragment"
+            app:destination="@id/menu_settings" />
+    </fragment>
+    <fragment
+        android:id="@id/menu_settings"
+        android:name="com.example.practiceproject.Settings"
+        android:label="fragment_settings"
+        tools:layout="@layout/fragment_settings" >
+        <action
+            android:id="@+id/action_settingsFragment_to_mapFragment"
+            app:destination="@id/menu_map" />
+        <action
+            android:id="@+id/action_settingsFragment_to_stationsFragment"
+            app:destination="@id/menu_stations" />
+    </fragment>
+</navigation>

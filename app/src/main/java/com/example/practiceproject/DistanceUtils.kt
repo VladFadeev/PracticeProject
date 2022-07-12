@@ -1,10 +1,8 @@
 package com.example.practiceproject
 
-import com.example.practiceproject.DistanceUtils
 import com.google.maps.DirectionsApi.RouteRestriction
 import com.google.maps.model.DistanceMatrix
 import com.google.maps.GeoApiContext
-import com.google.maps.DistanceMatrixApiRequest
 import com.google.maps.DistanceMatrixApi
 import com.google.maps.model.LatLng
 import com.google.maps.model.TravelMode

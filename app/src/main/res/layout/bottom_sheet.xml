@@ -3,28 +3,67 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/bottom_sheet"
     android:layout_width="match_parent"
-    android:layout_height="340dp"
+    android:layout_height="wrap_content"
     android:background="@android:color/darker_gray"
     android:orientation="vertical"
     app:behavior_hideable="true"
-    app:behavior_peekHeight="80dp"
+    app:behavior_peekHeight="60dp"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
     <TextView
         android:id="@+id/bottom_sheet_peek"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="60dp"
         android:background="@color/teal_200"
         android:gravity="center"
-        android:text="@string/bottom_sheet_peek"
-        android:textColor="@android:color/white" />
+        android:text="@string/bottom_sheet_peek" />
 
-    <TextView
-        android:id="@+id/bottom_sheet_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/ActionWrapper"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="@string/bottom_sheet_content"
-        android:textColor="@android:color/white" />
+        android:layout_height="wrap_content"
+        android:paddingVertical="20dp">
+
+        <Button
+            android:id="@+id/action1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/action1"
+            android:textColor="#D7CCC8"
+            app:layout_constraintEnd_toStartOf="@id/action2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/action2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/action2"
+            android:textColor="#D7CCC8"
+            app:layout_constraintEnd_toStartOf="@id/action3"
+            app:layout_constraintStart_toEndOf="@id/action1"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/action3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/action3"
+            android:textColor="#D7CCC8"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/action2"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/bottom_sheet_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:text="@string/bottom_sheet_content"
+            android:textColor="@android:color/white"
+            app:layout_constraintTop_toBottomOf="@id/action2" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </LinearLayout>
