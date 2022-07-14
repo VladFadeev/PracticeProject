@@ -10,7 +10,7 @@ class StationsViewModel : ViewModel() {
         StationsUtils.getStations(this, 5)
     }
 
-    fun addStations() {
+    fun updateStations() {
         StationsUtils.getStations(this)
     }
 }

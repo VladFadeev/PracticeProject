@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.appcompat.widget.AppCompatSeekBar
 import kotlin.jvm.Synchronized
 import android.view.MotionEvent
+import android.view.animation.Animation
 
 class VerticalSeekBar : AppCompatSeekBar {
     constructor(context: Context?) : super(context!!)
@@ -46,6 +47,11 @@ class VerticalSeekBar : AppCompatSeekBar {
             MotionEvent.ACTION_CANCEL -> {}
         }
         return true
+    }
+
+    override fun startAnimation(animation: Animation?) {
+        Log.d(VerticalSeekBar::class.java.simpleName, "Animation")
+        super.startAnimation(animation)
     }
 
 }

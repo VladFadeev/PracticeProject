@@ -8,6 +8,7 @@ import androidx.navigation.ui.NavigationUI
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
+    private var interactionListener: MyUserInteractionListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,5 +39,14 @@ class MainActivity : AppCompatActivity() {
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults)
             }
         }
+    }
+
+    fun setInteractionListener(interactionListener: MyUserInteractionListener?) {
+        this.interactionListener = interactionListener
+    }
+
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        interactionListener?.onUserInteraction()
     }
 }

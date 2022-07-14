@@ -8,13 +8,14 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.RelativeLayout
+import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.MapFragment
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.Polyline
@@ -23,11 +24,12 @@ import com.google.android.gms.tasks.Task
 import java.util.concurrent.Executors
 
 
-class MapFragment : Fragment(), OnMapReadyCallback {
+class MapFragment : Fragment(), OnMapReadyCallback, MyUserInteractionListener {
     private var fusedLocationProviderClient: FusedLocationProviderClient? = null
     private var map: GoogleMap? = null
     private var lastKnownLocation: Location? = null
     private var polyline: Polyline? = null
+    private var handler : SeekBarInactivityHandler? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,15 +46,55 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val seekbar = view.findViewById<SeekBar>(R.id.verticalSeekBar)
+        val button = view.findViewById<Button>(R.id.button)
+        val customAnimations = CustomAnimations()
+        handler = SeekBarInactivityHandler(button, seekbar, activity!!)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         if (map == null) {
             val mapFragment = childFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment?
             mapFragment?.getMapAsync(this)
         }
+        seekbar.visibility = View.GONE
+        seekbar.incrementProgressBy(5)
+        seekbar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                map!!.moveCamera(CameraUpdateFactory.zoomTo((230 - p1).toFloat() / 10))
+                handler!!.stopHandler()
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {
+                handler!!.stopHandler()
+            }
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {
+                handler!!.startHandler(6000)
+            }
+        })
+        button!!.setOnClickListener {
+            customAnimations.expand(seekbar)
+            customAnimations.collapse2d(button)
+            handler!!.startHandler(8000)
+            (activity as MainActivity).setInteractionListener(this)
+        }
     }
 
-    /*override fun onMapReady(googleMap: GoogleMap) {
+    override fun onUserInteraction() {
+        handler!!.resetHandler()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        handler!!.resetHandler()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        handler!!.stopHandler()
+    }
+
+/*override fun onMapReady(googleMap: GoogleMap) {
         val behavior = BottomSheetBehavior
             .from(view!!.findViewById<LinearLayout>(R.id.bottom_sheet))
         behavior.state = BottomSheetBehavior.STATE_HIDDEN

@@ -16,7 +16,7 @@ class MetroStations : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (savedInstanceState != null && model.stationsList.value!!.size < 7) {
-            model.addStations()
+            model.updateStations()
         }
     }
 
