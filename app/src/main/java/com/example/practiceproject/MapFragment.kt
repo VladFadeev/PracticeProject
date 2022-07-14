@@ -14,9 +14,11 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.MapFragment
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
 import java.util.concurrent.Executors
 
@@ -26,11 +28,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private var map: GoogleMap? = null
     private var lastKnownLocation: Location? = null
     private var polyline: Polyline? = null
-    private val TAG: String = Fragment::class.toString()
-    private val defaultLocation = com.google.android.gms.maps.model.LatLng(53.9193, 27.5768)
-    private val CAMERA_ZOOM = 14
-    private val DEFAULT_CAMERA_ZOOM = 12
-    private val MAPS_API_KEY: String = BuildConfig.MAPS_API_KEY
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,9 +45,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = childFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment?
-        mapFragment?.getMapAsync(this)
+        if (map == null) {
+            val mapFragment = childFragmentManager
+                .findFragmentById(R.id.map) as SupportMapFragment?
+            mapFragment?.getMapAsync(this)
+        }
     }
 
     /*override fun onMapReady(googleMap: GoogleMap) {
@@ -130,7 +129,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                             if (lastKnownLocation != null) {
                                 map!!.moveCamera(
                                     CameraUpdateFactory.newLatLngZoom(
-                                        com.google.android.gms.maps.model.LatLng(
+                                        LatLng(
                                             lastKnownLocation!!.latitude,
                                             lastKnownLocation!!.longitude
                                         ), CAMERA_ZOOM.toFloat()
@@ -187,5 +186,13 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         } catch (e: SecurityException) {
             Log.e("Exception: %s", e.message!!)
         }
+    }
+
+    companion object {
+        private const val CAMERA_ZOOM = 14
+        private const val DEFAULT_CAMERA_ZOOM = 12
+        private const val MAPS_API_KEY: String = BuildConfig.MAPS_API_KEY
+        private val TAG: String = Fragment::class.toString()
+        private val defaultLocation = LatLng(53.9193, 27.5768)
     }
 }

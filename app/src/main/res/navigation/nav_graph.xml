@@ -11,10 +11,12 @@
         tools:layout="@layout/fragment_map" >
         <action
             android:id="@+id/action_mapFragment_to_settingsFragment"
-            app:destination="@id/menu_settings" />
+            app:destination="@id/menu_settings"
+            app:enterAnim="@android:anim/slide_in_left" />
         <action
             android:id="@+id/action_mapFragment_to_stationsFragment"
-            app:destination="@id/menu_stations" />
+            app:destination="@id/menu_stations"
+            app:enterAnim="@android:anim/accelerate_decelerate_interpolator" />
     </fragment>
     <fragment
         android:id="@id/menu_stations"

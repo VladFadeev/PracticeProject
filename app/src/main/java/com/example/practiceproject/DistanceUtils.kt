@@ -15,11 +15,9 @@ import java.time.Instant
 object DistanceUtils {
 
     fun estimateRouteTime(
-        time: Instant?,
-        MAPS_API_KEY: String?,
+        time: Instant?, MAPS_API_KEY: String?,
         isForCalculateArrivalTime: Boolean,
-        routeRestriction: RouteRestriction?,
-        departure: LatLng?,
+        routeRestriction: RouteRestriction?, departure: LatLng?,
         vararg arrivals: LatLng?
     ): DistanceMatrix? {
         try {
