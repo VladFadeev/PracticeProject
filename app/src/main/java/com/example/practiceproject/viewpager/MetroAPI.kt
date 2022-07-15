@@ -1,4 +1,4 @@
-package com.example.practiceproject
+package com.example.practiceproject.viewpager
 
 import retrofit2.http.GET
 import retrofit2.Call

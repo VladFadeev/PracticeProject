@@ -1,8 +1,10 @@
-package com.example.practiceproject
+package com.example.practiceproject.viewpager
 
 import android.util.Log
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.example.practiceproject.PermissionsUtils
+import com.example.practiceproject.R
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import retrofit2.Call

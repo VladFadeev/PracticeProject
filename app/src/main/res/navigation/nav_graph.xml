@@ -15,14 +15,14 @@
             app:enterAnim="@android:anim/slide_in_left" />
         <action
             android:id="@+id/action_mapFragment_to_stationsFragment"
-            app:destination="@id/menu_stations"
+            app:destination="@id/menu_places"
             app:enterAnim="@android:anim/accelerate_decelerate_interpolator" />
     </fragment>
     <fragment
-        android:id="@id/menu_stations"
-        android:name="com.example.practiceproject.MetroStations"
+        android:id="@id/menu_places"
+        android:name="com.example.practiceproject.viewpager.ViewPagerFragment"
         android:label="fragment_metro_stations"
-        tools:layout="@layout/fragment_metro_stations">
+        tools:layout="@layout/fragment_view_pager">
         <action
             android:id="@+id/action_stationsFragment_to_mapFragment"
             app:destination="@id/menu_map" />
@@ -40,6 +40,6 @@
             app:destination="@id/menu_map" />
         <action
             android:id="@+id/action_settingsFragment_to_stationsFragment"
-            app:destination="@id/menu_stations" />
+            app:destination="@id/menu_places" />
     </fragment>
 </navigation>

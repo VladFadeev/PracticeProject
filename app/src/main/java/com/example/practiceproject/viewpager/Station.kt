@@ -1,4 +1,4 @@
-package com.example.practiceproject
+package com.example.practiceproject.viewpager
 
 import java.lang.StringBuilder
 import java.util.*

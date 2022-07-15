@@ -1,4 +1,4 @@
-package com.example.practiceproject
+package com.example.practiceproject.viewpager
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import com.example.practiceproject.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 class MetroStations : Fragment() {
@@ -34,7 +35,7 @@ class MetroStations : Fragment() {
             .from(view.findViewById<LinearLayout>(R.id.bottom_sheet))
         behavior.state = BottomSheetBehavior.STATE_HIDDEN
         val layout = view.findViewById<LinearLayout>(R.id.stationsList)
-        val stationsObserver = Observer<List<Station>> {stationList ->
+        val stationsObserver = Observer<List<Station>> { stationList ->
             StationsUtils.addStationsList(layout, view.findViewById(R.id.bottom_sheet), stationList)
         }
         model.stationsList.observe(viewLifecycleOwner, stationsObserver)
