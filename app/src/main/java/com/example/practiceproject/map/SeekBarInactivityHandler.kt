@@ -1,20 +1,25 @@
-package com.example.practiceproject
+package com.example.practiceproject.map
 
 import android.app.Activity
 import android.os.Handler
 import android.widget.Button
 import android.widget.SeekBar
+import com.example.practiceproject.MainActivity
+import com.example.practiceproject.R
 
-class SeekBarInactivityHandler(private val button: Button, private val seekBar: SeekBar, private val activity: Activity) {
+class SeekBarInactivityHandler(private val button: Button,
+                               private val seekBar: SeekBar,
+                               private val activity: Activity) {
     private val mHandler = Handler(activity.mainLooper)
     private val customAnimations = CustomAnimations()
+    private val normalDelay = activity.resources.getInteger(R.integer.normal_delay).toLong()
     private val inactivityCallback : Runnable = Runnable{
         (activity as MainActivity).setInteractionListener(null)
         customAnimations.collapse(seekBar)
         customAnimations.expand2d(button)
     }
 
-    fun startHandler(delay: Long = 3000) {
+    fun startHandler(delay: Long = normalDelay ) {
         mHandler.postDelayed(inactivityCallback, delay)
     }
 

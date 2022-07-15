@@ -1,0 +1,9 @@
+<resources>
+    <integer name="seekbar_max_progress">21</integer>
+    <integer name="seekbar_min_progress">2</integer>
+    <integer name="seekbar_scale">10</integer>
+    <integer name="seekbar_default_progress">7</integer>
+    <integer name="interaction_end_delay">6000</integer>
+    <integer name="start_delay">8000</integer>
+    <integer name="normal_delay">3000</integer>
+</resources>

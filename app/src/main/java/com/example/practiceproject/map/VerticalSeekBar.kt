@@ -1,16 +1,18 @@
-package com.example.practiceproject
+package com.example.practiceproject.map
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.util.AttributeSet
-import android.util.Log
 import androidx.appcompat.widget.AppCompatSeekBar
 import kotlin.jvm.Synchronized
 import android.view.MotionEvent
 import android.view.animation.Animation
 
 class VerticalSeekBar : AppCompatSeekBar {
+
     constructor(context: Context?) : super(context!!)
+
     constructor(context: Context?, attrs: AttributeSet?, defStyle: Int) : super(
         context!!, attrs, defStyle
     )
@@ -35,6 +37,7 @@ class VerticalSeekBar : AppCompatSeekBar {
         super.onDraw(c)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (!isEnabled) {
             return false
@@ -50,7 +53,6 @@ class VerticalSeekBar : AppCompatSeekBar {
     }
 
     override fun startAnimation(animation: Animation?) {
-        Log.d(VerticalSeekBar::class.java.simpleName, "Animation")
         super.startAnimation(animation)
     }
 

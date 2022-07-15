@@ -6,7 +6,7 @@
     app:startDestination="@id/menu_map">
     <fragment
         android:id="@id/menu_map"
-        android:name="com.example.practiceproject.MapFragment"
+        android:name="com.example.practiceproject.map.MapFragment"
         android:label="fragment_map"
         tools:layout="@layout/fragment_map" >
         <action

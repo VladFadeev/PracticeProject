@@ -1,4 +1,4 @@
-package com.example.practiceproject
+package com.example.practiceproject.map
 
 interface MyUserInteractionListener {
     fun onUserInteraction()
