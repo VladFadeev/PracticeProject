@@ -11,15 +11,7 @@ import androidx.lifecycle.Observer
 import com.example.practiceproject.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
-class MetroStations : Fragment() {
-    private val model : StationsViewModel by viewModels()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (savedInstanceState != null && model.stationsList.value!!.size < 7) {
-            model.updateStations()
-        }
-    }
+class StationsFragment(private val list: List<Station>) : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,9 +27,6 @@ class MetroStations : Fragment() {
             .from(view.findViewById<LinearLayout>(R.id.bottom_sheet))
         behavior.state = BottomSheetBehavior.STATE_HIDDEN
         val layout = view.findViewById<LinearLayout>(R.id.stationsList)
-        val stationsObserver = Observer<List<Station>> { stationList ->
-            StationsUtils.addStationsList(layout, view.findViewById(R.id.bottom_sheet), stationList)
-        }
-        model.stationsList.observe(viewLifecycleOwner, stationsObserver)
+        StationsUtils.addStationsList(layout, view.findViewById(R.id.bottom_sheet), list)
     }
 }

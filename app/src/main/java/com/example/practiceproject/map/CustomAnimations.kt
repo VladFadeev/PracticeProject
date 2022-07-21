@@ -5,7 +5,7 @@ import android.view.animation.Animation
 import android.view.animation.Transformation
 
 
-class CustomAnimations {
+object CustomAnimations {
     fun expand(v: View) {
         val targetHeight = v.layoutParams.height
         // Older versions of android (pre API 21) cancel animations for views with a height of 0.

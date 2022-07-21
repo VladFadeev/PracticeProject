@@ -19,13 +19,6 @@ class MapFragment : Fragment(), MyUserInteractionListener {
     private var handler: SeekBarInactivityHandler? = null
     private val myLocationButtonMarginLeft = 25f
     private val myLocationButtonMarginBottom = 30f
-    private var seekBarScale : Int? = null
-    private var seekBarMax : Int? = null
-    private var seekBarMin : Int? = null
-    private var seekBarDefaultProgress : Int? = null
-    private var delay : Long? = null
-    private var startDelay : Long? = null
-    private var seekBarStep : Int? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -37,13 +30,13 @@ class MapFragment : Fragment(), MyUserInteractionListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        seekBarScale = resources.getInteger(R.integer.seekbar_scale)
-        seekBarStep = seekBarScale!! / 2
-        seekBarMax = resources.getInteger(R.integer.seekbar_max_progress)
-        seekBarMin = resources.getInteger(R.integer.seekbar_min_progress)
-        seekBarDefaultProgress = resources.getInteger(R.integer.seekbar_default_progress)
-        delay = resources.getInteger(R.integer.interaction_end_delay).toLong()
-        startDelay = resources.getInteger(R.integer.start_delay).toLong()
+        val seekBarScale = resources.getInteger(R.integer.seekbar_scale)
+        val seekBarStep = seekBarScale / 2
+        val seekBarMax = resources.getInteger(R.integer.seekbar_max_progress)
+        val seekBarMin = resources.getInteger(R.integer.seekbar_min_progress)
+        val seekBarDefaultProgress = resources.getInteger(R.integer.seekbar_default_progress)
+        val delay = resources.getInteger(R.integer.interaction_end_delay).toLong()
+        val startDelay = resources.getInteger(R.integer.start_delay).toLong()
         val mapSupportFragment =
             childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         if (mapViewModel == null) {
@@ -55,18 +48,18 @@ class MapFragment : Fragment(), MyUserInteractionListener {
         }
         val seekbar = view.findViewById<SeekBar>(R.id.verticalSeekBar)
         seekbar.visibility = View.GONE
-        seekbar.max = seekBarMax!! * seekBarScale!!
-        seekbar.min = seekBarMin!! * seekBarScale!!
-        seekbar.progress = seekBarDefaultProgress!! * seekBarScale!!
-        seekbar.incrementProgressBy(seekBarStep!!)
+        seekbar.max = seekBarMax * seekBarScale
+        seekbar.min = seekBarMin * seekBarScale
+        seekbar.progress = seekBarDefaultProgress * seekBarScale
+        seekbar.incrementProgressBy(seekBarStep)
         seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                 mapViewModel!!
                     .map.value!!.moveCamera(
                         CameraUpdateFactory
                             .zoomTo(
-                                ((seekBarMax!! + seekBarMin!!) * seekBarScale!! - p1)
-                                    .toFloat() / seekBarScale!!
+                                ((seekBarMax + seekBarMin) * seekBarScale - p1)
+                                    .toFloat() / seekBarScale
                             )
                     )
                 handler!!.stopHandler()
@@ -77,23 +70,20 @@ class MapFragment : Fragment(), MyUserInteractionListener {
             }
 
             override fun onStopTrackingTouch(p0: SeekBar?) {
-                handler!!.startHandler(delay!!)
+                handler!!.startHandler(delay)
             }
         })
         val button = view.findViewById<Button>(R.id.button)
-        val customAnimations = CustomAnimations()
         handler = SeekBarInactivityHandler(button, seekbar, activity!!)
         button!!.setOnClickListener {
-            customAnimations.expand(seekbar)
-            customAnimations.collapse2d(button)
-            handler!!.startHandler(startDelay!!)
+            CustomAnimations.expand(seekbar)
+            CustomAnimations.collapse2d(button)
+            handler!!.startHandler(startDelay)
             (activity as MainActivity).setInteractionListener(this)
         }
     }
 
-    override fun onUserInteraction() {
-        handler!!.resetHandler()
-    }
+    override fun onUserInteraction() = handler!!.resetHandler()
 
     override fun onResume() {
         super.onResume()

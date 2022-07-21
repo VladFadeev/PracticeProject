@@ -11,12 +11,11 @@ class SeekBarInactivityHandler(private val button: Button,
                                private val seekBar: SeekBar,
                                private val activity: Activity) {
     private val mHandler = Handler(activity.mainLooper)
-    private val customAnimations = CustomAnimations()
     private val normalDelay = activity.resources.getInteger(R.integer.normal_delay).toLong()
     private val inactivityCallback : Runnable = Runnable{
         (activity as MainActivity).setInteractionListener(null)
-        customAnimations.collapse(seekBar)
-        customAnimations.expand2d(button)
+        CustomAnimations.collapse(seekBar)
+        CustomAnimations.expand2d(button)
     }
 
     fun startHandler(delay: Long = normalDelay ) {

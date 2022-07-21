@@ -5,7 +5,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.example.practiceproject.PermissionsUtils
 import com.example.practiceproject.R
-import com.google.android.gms.maps.GoogleMap
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import retrofit2.Call
 import retrofit2.Callback
@@ -13,10 +12,10 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object StationsUtils {
+object StationsUtils: PlacesUtils {
     private const val BASE_URL = "https://my-json-server.typicode.com/BeeWhy/metro/"
 
-    fun addStationsMarkers(map: GoogleMap, stations: List<Station>) {
+    /*fun addStationsMarkers(map: GoogleMap, stations: List<Station>) {
 
         /*for (station in stationList) {
             map.addMarker(
@@ -25,7 +24,7 @@ object StationsUtils {
                     .title(station.name)
             )
         }*/
-    }
+    }*/
 
     fun addStationsList(layout: LinearLayout, bottomSheet: LinearLayout, stations: List<Station>) {
         layout.removeAllViews()
@@ -33,7 +32,7 @@ object StationsUtils {
         val peek = bottomSheet.findViewById<TextView>(R.id.bottom_sheet_peek)
         for (station in stations) {
             val textView = TextView(layout.context)
-            textView.text = station.name
+            textView.text = station.stationName
             textView.setOnClickListener {
                 if (behavior.state == BottomSheetBehavior.STATE_HIDDEN) {
                     behavior.state = BottomSheetBehavior.STATE_COLLAPSED
@@ -45,8 +44,13 @@ object StationsUtils {
         }
     }
 
+    override fun addAll(model: PlacesViewModel): List<Place> {
+        return getAll(model)
+    }
+
     @Throws(SecurityException::class)
-    fun getStations(model: StationsViewModel) {
+    override fun getAll(model: PlacesViewModel): List<Station> {
+        var list: List<Station> = ArrayList()
         if (PermissionsUtils.isInternetPermissionGranted) {
             val retrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
@@ -59,22 +63,23 @@ object StationsUtils {
                     response: Response<List<Station>>
                 ) {
                     if (response.body() != null) {
-                        model.stationsList.value = response.body()!!
-                            .filter { station -> station.name.lowercase() != "error" }
+                        (model.placesList.value as MutableList).add(Places.Stations.ordinal, response.body()!!
+                            .filter { station -> station.stationName.lowercase() != "error" })
                     }
                 }
 
                 override fun onFailure(call: Call<List<Station>>, t: Throwable) {
-                    Log.e(StationsViewModel::class.java.simpleName, t.stackTraceToString())
+                    Log.e(PlacesViewModel::class.java.simpleName, t.stackTraceToString())
                 }
             })
         } else {
             throw SecurityException("Don't have permission")
         }
+        return list
     }
 
     @Throws(SecurityException::class)
-    fun getStations(model: StationsViewModel, num : Int) {
+    fun getStations(model: PlacesViewModel, num : Int) {
         if (PermissionsUtils.isInternetPermissionGranted) {
             val retrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
@@ -87,13 +92,13 @@ object StationsUtils {
                     response: Response<List<Station>>
                 ) {
                     if (response.body() != null) {
-                        model.stationsList.value = response.body()!!
-                            .filter { station -> station.name.lowercase() != "error" }.subList(0, num)
+                        (model.placesList.value as MutableList).add(response.body()!!
+                            .filter { station -> station.stationName.lowercase() != "error" }.subList(0, num))
                     }
                 }
 
                 override fun onFailure(call: Call<List<Station>>, t: Throwable) {
-                    Log.e(StationsViewModel::class.java.simpleName, t.stackTraceToString())
+                    Log.e(PlacesViewModel::class.java.simpleName, t.stackTraceToString())
                 }
             })
         } else {
