@@ -1,17 +1,23 @@
 package com.example.practiceproject.viewpager
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class PlacesViewModel : ViewModel() {
-    val placesList = MutableLiveData<List<List<Place>>>()
+    private val placesList: MutableLiveData<List<List<Place>>> by lazy {
+        MutableLiveData<List<List<Place>>>().also {
+           PlacesModel.getAllPlaces(it)
+        }
+    }
 
-    init {
-        placesList.value = ArrayList()
-        PlacesModel.getAllPlaces(this)
+    fun getPlaces(): LiveData<List<List<Place>>> {
+        return placesList
     }
 
     fun updateAllPlaces() {
-        PlacesModel.updateAllPlaces(this)
+        PlacesModel.updateAllPlaces(placesList)
     }
 }

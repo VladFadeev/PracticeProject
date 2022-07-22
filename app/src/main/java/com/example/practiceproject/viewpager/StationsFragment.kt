@@ -11,8 +11,18 @@ import androidx.lifecycle.Observer
 import com.example.practiceproject.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
-class StationsFragment(private val list: List<Station>) : Fragment() {
+private const val LIST = "List"
 
+class StationsFragment : Fragment() {
+
+    private var list: List<Station>? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        arguments?.let {
+            list = it.getParcelableArrayList(LIST)
+        }
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -27,6 +37,16 @@ class StationsFragment(private val list: List<Station>) : Fragment() {
             .from(view.findViewById<LinearLayout>(R.id.bottom_sheet))
         behavior.state = BottomSheetBehavior.STATE_HIDDEN
         val layout = view.findViewById<LinearLayout>(R.id.stationsList)
-        StationsUtils.addStationsList(layout, view.findViewById(R.id.bottom_sheet), list)
+        StationsUtils.addStationsList(layout, view.findViewById(R.id.bottom_sheet), list!!)
+    }
+
+    companion object {
+        @JvmStatic
+        fun newInstance(list: List<Station>) =
+            StationsFragment().apply {
+                arguments = Bundle().apply {
+                    putParcelableArrayList(LIST, list as ArrayList)
+                }
+            }
     }
 }

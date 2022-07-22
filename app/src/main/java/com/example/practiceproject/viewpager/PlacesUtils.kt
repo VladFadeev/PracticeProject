@@ -1,7 +1,9 @@
 package com.example.practiceproject.viewpager
 
-interface PlacesUtils {
-    fun getAll(model: PlacesViewModel): List<Place>
+import androidx.lifecycle.LiveData
 
-    fun addAll(model: PlacesViewModel): List<Place>
+interface PlacesUtils {
+    fun getAll(data: LiveData<List<List<Place>>>)
+
+    fun addAll(data: LiveData<List<List<Place>>>)
 }

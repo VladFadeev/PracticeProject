@@ -3,6 +3,8 @@ package com.example.practiceproject.viewpager
 import android.util.Log
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.practiceproject.PermissionsUtils
 import com.example.practiceproject.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -44,38 +46,43 @@ object StationsUtils: PlacesUtils {
         }
     }
 
-    override fun addAll(model: PlacesViewModel): List<Place> {
-        return getAll(model)
+    override fun addAll(data: LiveData<List<List<Place>>>) {
+        getAll(data)
     }
 
     @Throws(SecurityException::class)
-    override fun getAll(model: PlacesViewModel): List<Station> {
-        var list: List<Station> = ArrayList()
+    override fun getAll(data: LiveData<List<List<Place>>>) {
         if (PermissionsUtils.isInternetPermissionGranted) {
             val retrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
             val metroAPI = retrofit.create(MetroAPI::class.java)
-            metroAPI.stations().enqueue(object : Callback<List<Station>> {
+            metroAPI.stations().enqueue(object: Callback<List<Station>>{
                 override fun onResponse(
                     call: Call<List<Station>>,
                     response: Response<List<Station>>
                 ) {
                     if (response.body() != null) {
-                        (model.placesList.value as MutableList).add(Places.Stations.ordinal, response.body()!!
+                        if (data.value != null){
+                        (data.value as MutableList).add(Places.Stations.ordinal, response.body()!!
                             .filter { station -> station.stationName.lowercase() != "error" })
+                        } else {
+                            (data as MutableLiveData).postValue(ArrayList<List<Place>>().apply { add(Places.Stations.ordinal, response.body()!!
+                                .filter { station -> station.stationName.lowercase() != "error" })
+                            })
+                        }
                     }
                 }
 
                 override fun onFailure(call: Call<List<Station>>, t: Throwable) {
-                    Log.e(PlacesViewModel::class.java.simpleName, t.stackTraceToString())
+                    Log.e(this::class.java.simpleName, "Failed to get stations", t)
                 }
+
             })
         } else {
             throw SecurityException("Don't have permission")
         }
-        return list
     }
 
     @Throws(SecurityException::class)
@@ -92,7 +99,7 @@ object StationsUtils: PlacesUtils {
                     response: Response<List<Station>>
                 ) {
                     if (response.body() != null) {
-                        (model.placesList.value as MutableList).add(response.body()!!
+                        (model.getPlaces().value as MutableList).add(response.body()!!
                             .filter { station -> station.stationName.lowercase() != "error" }.subList(0, num))
                     }
                 }

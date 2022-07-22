@@ -1,11 +1,13 @@
 package com.example.practiceproject.viewpager
 
+import androidx.lifecycle.LiveData
+
 object SightsUtils: PlacesUtils {
-    override fun getAll(model: PlacesViewModel): List<Place> {
+    override fun getAll(data: LiveData<List<List<Place>>>) {
         TODO("JSON and DB access")
     }
 
-    override fun addAll(model: PlacesViewModel): List<Place> {
-        return getAll(model)
+    override fun addAll(data: LiveData<List<List<Place>>>) {
+        return getAll(data)
     }
 }
