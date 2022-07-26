@@ -5,8 +5,8 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/menu_map">
     <fragment
-        android:id="@id/menu_map"
-        android:name="com.example.practiceproject.map.MapFragment"
+        android:id="@+id/menu_map"
+        android:name="com.example.practiceproject.ui.map.MapFragment"
         android:label="fragment_map"
         tools:layout="@layout/fragment_map" >
         <action
@@ -19,8 +19,8 @@
             app:enterAnim="@android:anim/accelerate_decelerate_interpolator" />
     </fragment>
     <fragment
-        android:id="@id/menu_places"
-        android:name="com.example.practiceproject.viewpager.ViewPagerFragment"
+        android:id="@+id/menu_places"
+        android:name="com.example.practiceproject.ui.viewpager.ViewPagerFragment"
         android:label="fragment_metro_stations"
         tools:layout="@layout/fragment_view_pager">
         <action
@@ -31,10 +31,10 @@
             app:destination="@id/menu_settings" />
     </fragment>
     <fragment
-        android:id="@id/menu_settings"
-        android:name="com.example.practiceproject.Settings"
+        android:id="@+id/menu_settings"
+        android:name="com.example.practiceproject.ui.settings.Settings"
         android:label="fragment_settings"
-        tools:layout="@layout/fragment_settings" >
+        tools:layout="@layout/fragment_settings">
         <action
             android:id="@+id/action_settingsFragment_to_mapFragment"
             app:destination="@id/menu_map" />

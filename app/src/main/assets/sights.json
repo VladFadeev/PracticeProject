@@ -1,0 +1,25 @@
+[
+  {
+    "name": "Чижовка-Арена",
+    "latitude": 53.8446,
+    "longitude": 27.6291,
+    "isFavorite": false
+  },
+  {
+    "name": "Национальная Библиотека",
+    "latitude": 53.9315,
+    "longitude": 27.6462,
+    "isFavorite": false
+  },
+  {
+    "name": "Большой театр оперы и балета",
+    "latitude": 53.9103,
+    "longitude": 27.5615,
+    "isFavorite": false
+  },
+  {
+    "name": "Комаровский рынок",
+    "latitude": 53.9198,
+    "longitude": 27.5776,
+    "isFavorite": true
+  }]
