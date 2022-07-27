@@ -37,7 +37,7 @@ object SightsUtils: PlacesUtils {
         val peek = bottomSheet.findViewById<TextView>(R.id.bottom_sheet_peek)
         for (sight in sights) {
             val textView = TextView(layout.context)
-            textView.text = sight.name
+            textView.text = sight.getName()
             textView.setOnClickListener {
                 if (behavior.state == BottomSheetBehavior.STATE_HIDDEN) {
                     behavior.state = BottomSheetBehavior.STATE_COLLAPSED

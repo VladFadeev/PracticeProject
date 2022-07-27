@@ -11,11 +11,16 @@ class ListAdapter(fragment: Fragment, private val data: LiveData<List<List<Place
     override fun getItemCount(): Int = data.value?.size ?: 1
 
     override fun createFragment(position: Int): Fragment {
-        val fragment = if (data.value != null && data.value!![position].isNotEmpty()) when (data.value!![position][0]) {
-            is Station -> StationsFragment.newInstance(data.value!![position] as List<Station>)
-            is Sight -> SightFragment.newInstance(data.value!![position] as List<Sight>)
-            else -> BlankFragment()
-        } else BlankFragment()
+        val fragment = if (data.value != null &&
+            position < data.value!!.size && data.value!![position].isNotEmpty()) {
+            when (data.value!![position][0]) {
+                is Station -> PageFragment.newInstance(data.value!![position])
+                is Sight -> PageFragment.newInstance(data.value!![position])
+                else -> PageFragment.newInstance()
+            }
+        } else {
+            PageFragment.newInstance()
+        }
         return fragment
     }
 }

@@ -3,6 +3,7 @@ package com.example.practiceproject.ui
 import android.Manifest
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import com.example.practiceproject.R
@@ -18,12 +19,14 @@ import java.io.FileWriter
 
 class MainActivity : AppCompatActivity() {
     private var interactionListener: MyUserInteractionListener? = null
+    private lateinit var bottomNavigationView: BottomNavigationView
+    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         PermissionsUtils.getLocationPermission(this)
         PermissionsUtils.getInternetPermission(this)
+        setContentView(R.layout.activity_main)
         val prefs = getSharedPreferences("com.example.practiceproject", MODE_PRIVATE)
         if (prefs.getBoolean("firstrun", true)) {
             if (PermissionsUtils.isInternetPermissionGranted) {
@@ -32,10 +35,10 @@ class MainActivity : AppCompatActivity() {
             SightsUtils.receiveSights(applicationContext)
             prefs.edit().putBoolean("firstrun", false).commit()
         }
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.menu)
+        bottomNavigationView = findViewById(R.id.menu)
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
+        navController = navHostFragment.navController
         NavigationUI.setupWithNavController(bottomNavigationView, navController)
     }
 

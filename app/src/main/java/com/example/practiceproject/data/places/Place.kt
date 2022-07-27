@@ -5,19 +5,22 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity
-abstract class Place(var name: String,
-                     var latitude: Float,
-                     var longitude: Float,
-                     private var type: PlaceType
-) : Parcelable {
-    @PrimaryKey(autoGenerate = true)
-    var id: Int = 0
-
+@Entity(tableName = "places")
+abstract class Place(@PrimaryKey(autoGenerate = true) private var id: Int,
+                     private var name: String,
+                     private var latitude: Float,
+                     private var longitude: Float,
+                     @ColumnInfo(name = "favorite")
+                     private var isFavorite: Boolean,
+                     private var type: PlaceType,
+                     ) : Parcelable {
+    fun getId() = id
+    fun getName() = name
+    fun getLatitude() = latitude
+    fun getLongitude() = longitude
+    fun getIsFavorite() = isFavorite
     fun getType() = type
-    fun setType(value: PlaceType) {
+    protected open fun setType(value: PlaceType) {
         type = value
     }
-    @ColumnInfo(name = "favorite")
-    var isFavorite: Boolean = false
 }

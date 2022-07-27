@@ -3,29 +3,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.viewpager.SightFragment">
+    tools:context=".ui.viewpager.PageFragment">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <ScrollView
-            android:id="@+id/sights"
+            android:id="@+id/places"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@string/sightsList">
+            android:layout_height="match_parent">
 
             <LinearLayout
-                android:id="@+id/sightsList"
+                android:id="@+id/placesList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" >
 
                 <TextView
-                    android:id="@+id/sight"
+                    android:id="@+id/place"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/sightsList" />
+                    android:text="@string/placesList" />
 
             </LinearLayout>
 

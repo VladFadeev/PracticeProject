@@ -22,10 +22,10 @@ abstract class PlaceDao {
     @Delete
     abstract fun delete(place: Place)
 
-    @Query("SELECT * FROM place")
+    @Query("SELECT * FROM places")
     protected abstract fun getAllInternal(): Cursor
 
-    @Query("SELECT * FROM place WHERE type = :type")
+    @Query("SELECT * FROM places WHERE type = :type")
     protected abstract fun getAllByTypeInternal(type: PlaceType): Cursor
 
     fun getAll(): List<Place> {

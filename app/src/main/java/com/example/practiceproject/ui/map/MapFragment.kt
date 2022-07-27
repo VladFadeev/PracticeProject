@@ -22,8 +22,10 @@ import com.example.practiceproject.utils.PermissionsUtils
 import com.example.practiceproject.utils.SeekBarInactivityHandler
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.MapFragment
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
@@ -36,7 +38,7 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
     private val myLocationButtonMarginLeft = 25f
     private val myLocationButtonMarginBottom = 30f
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-    private var lastKnownLocation : Location? = null
+    private var lastKnownLocation: Location? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -57,7 +59,7 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
         val startDelay = resources.getInteger(R.integer.start_delay).toLong()
         val mapSupportFragment =
             childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity!!)
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this.context!!)
         if (mapViewModel == null) {
             mapViewModel = ViewModelProvider(
                 this,
@@ -104,47 +106,47 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
 
     override fun onMapReady(p0: GoogleMap) {
         mapViewModel!!.getMap().value = p0
-        defaultLocation()
         updateDeviceLocation()
     }
 
     fun updateDeviceLocation() {
-        updateLocationUI()
         val executorService = Executors.newSingleThreadExecutor()
-        executorService.submit { deviceLocation }
+        executorService.submit { getDeviceLocation()}
         executorService.shutdown()
     }
 
-    private val deviceLocation: Unit
-        get() {
-            try {
-                if (PermissionsUtils.isLocationPermissionGranted) {
-                    val locationResult = fusedLocationProviderClient.lastLocation
-                    locationResult.addOnCompleteListener(activity!!)
-                    { task: Task<Location?> ->
-                        if (task.isSuccessful) {
-                            lastKnownLocation = task.result
-                            if (lastKnownLocation != null) {
-                                mapViewModel!!.getMap().value!!.moveCamera(
-                                    CameraUpdateFactory.newLatLngZoom(
-                                        LatLng(
-                                            lastKnownLocation!!.latitude,
-                                            lastKnownLocation!!.longitude
-                                        ), CAMERA_ZOOM.toFloat()
-                                    )
+    private fun getDeviceLocation() {
+        try {
+            if (PermissionsUtils.isLocationPermissionGranted) {
+                val locationResult = fusedLocationProviderClient.lastLocation
+                locationResult.addOnCompleteListener(activity!!)
+                { task: Task<Location?> ->
+                    if (task.isSuccessful) {
+                        //updateLocationUI()
+                        lastKnownLocation = task.result
+                        if (lastKnownLocation != null) {
+                            mapViewModel!!.getMap().value!!.moveCamera(
+                                CameraUpdateFactory.newLatLngZoom(
+                                    LatLng(
+                                        lastKnownLocation!!.latitude,
+                                        lastKnownLocation!!.longitude
+                                    ), CAMERA_ZOOM.toFloat()
                                 )
-                            }
-                        } else {
-                            Log.d(TAG, "Current location is null. Using defaults.")
-                            Log.e(TAG, "Exception: %s", task.exception)
-                            defaultLocation()
+                            )
                         }
+                    } else {
+                        Log.d(TAG, "Current location is null. Using defaults.")
+                        Log.e(TAG, "Exception: %s", task.exception)
+                        defaultLocation()
                     }
                 }
-            } catch (e: SecurityException) {
-                Log.e("Exception: %s", e.message, e)
+            } else {
+                defaultLocation()
             }
+        } catch (e: SecurityException) {
+            Log.e("Exception: %s", e.message, e)
         }
+    }
 
     private fun defaultLocation() {
         mapViewModel!!.getMap().value!!.moveCamera(
@@ -154,18 +156,14 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
                     DEFAULT_CAMERA_ZOOM.toFloat()
                 )
         )
-        mapViewModel!!.getMap().value!!.uiSettings.isMyLocationButtonEnabled = false
+        //mapViewModel!!.getMap().value!!.isMyLocationEnabled = PermissionsUtils.isLocationPermissionGranted
     }
 
-    fun updateLocationUI() {
-        val map = mapViewModel!!.getMap().value!!
+    private fun updateLocationUI() {
+        mapViewModel!!.getMap().value!!.isMyLocationEnabled = PermissionsUtils.isLocationPermissionGranted
+        mapViewModel!!.getMap().value!!.uiSettings.isMyLocationButtonEnabled = PermissionsUtils.isLocationPermissionGranted
         if (PermissionsUtils.isLocationPermissionGranted) {
-            map.isMyLocationEnabled = true
-            map.uiSettings.isMyLocationButtonEnabled = true
             updateMapUI()
-        } else {
-            map.isMyLocationEnabled = false
-            map.uiSettings.isMyLocationButtonEnabled = false
         }
     }
 
@@ -182,60 +180,60 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
     }
 
     /*override fun onMapReady(googleMap: GoogleMap) {
-        val behavior = BottomSheetBehavior
-            .from(view!!.findViewById<LinearLayout>(R.id.bottom_sheet))
-        behavior.state = BottomSheetBehavior.STATE_HIDDEN
-        map = googleMap
-        PermissionsUtils.getLocationPermission(activity!!)
-        PermissionsUtils.getInternetPermission(activity!!)
-        updateLocationUI()
-        val executorService = Executors.newFixedThreadPool(2)
-        executorService.submit { MetroService.addMetroMarkers(map!!) }
-        executorService.submit { deviceLocation }
-        executorService.shutdown()
-        map!!.setOnMarkerClickListener { marker: Marker ->
-            val name = view!!.findViewById<TextView>(R.id.bottom_sheet_peek)
-            if (behavior.state == BottomSheetBehavior.STATE_COLLAPSED && marker.title == name.text) {
-                behavior.state = BottomSheetBehavior.STATE_HIDDEN
-                polyline!!.remove()
-            } else {
-                behavior.state = BottomSheetBehavior.STATE_COLLAPSED
-                val content = view!!.findViewById<TextView>(R.id.bottom_sheet_content)
-                val distanceMatrix = DistanceUtils.estimateRouteTime(
-                    Instant.now(), MAPS_API_KEY,
-                    false, null,
-                    LatLng(
-                        lastKnownLocation!!.latitude,
-                        lastKnownLocation!!.longitude
-                    ),
-                    LatLng(
-                        marker.position.latitude,
-                        marker.position.longitude
-                    )
-                )
-                val distance = distanceMatrix!!.rows[0].elements[0].distance
-                name.text = marker.title
-                if (polyline != null) {
+            val behavior = BottomSheetBehavior
+                .from(view!!.findViewById<LinearLayout>(R.id.bottom_sheet))
+            behavior.state = BottomSheetBehavior.STATE_HIDDEN
+            map = googleMap
+            PermissionsUtils.getLocationPermission(activity!!)
+            PermissionsUtils.getInternetPermission(activity!!)
+            updateLocationUI()
+            val executorService = Executors.newFixedThreadPool(2)
+            executorService.submit { MetroService.addMetroMarkers(map!!) }
+            executorService.submit { deviceLocation }
+            executorService.shutdown()
+            map!!.setOnMarkerClickListener { marker: Marker ->
+                val name = view!!.findViewById<TextView>(R.id.bottom_sheet_peek)
+                if (behavior.state == BottomSheetBehavior.STATE_COLLAPSED && marker.title == name.text) {
+                    behavior.state = BottomSheetBehavior.STATE_HIDDEN
                     polyline!!.remove()
-                }
-                polyline = map!!.addPolyline(
-                    RoutesUtils.drawRoute(
-                        com.google.android.gms.maps.model.LatLng(
+                } else {
+                    behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                    val content = view!!.findViewById<TextView>(R.id.bottom_sheet_content)
+                    val distanceMatrix = DistanceUtils.estimateRouteTime(
+                        Instant.now(), MAPS_API_KEY,
+                        false, null,
+                        LatLng(
                             lastKnownLocation!!.latitude,
                             lastKnownLocation!!.longitude
                         ),
-                        marker.position, MAPS_API_KEY
-                    )!!
-                )
-                content.text = distance.humanReadable
+                        LatLng(
+                            marker.position.latitude,
+                            marker.position.longitude
+                        )
+                    )
+                    val distance = distanceMatrix!!.rows[0].elements[0].distance
+                    name.text = marker.title
+                    if (polyline != null) {
+                        polyline!!.remove()
+                    }
+                    polyline = map!!.addPolyline(
+                        RoutesUtils.drawRoute(
+                            com.google.android.gms.maps.model.LatLng(
+                                lastKnownLocation!!.latitude,
+                                lastKnownLocation!!.longitude
+                            ),
+                            marker.position, MAPS_API_KEY
+                        )!!
+                    )
+                    content.text = distance.humanReadable
+                }
+                true
             }
-            true
-        }
-        map!!.setOnMapClickListener {
-            polyline!!.remove()
-            behavior.setState(BottomSheetBehavior.STATE_HIDDEN)
-        }
-    }*/
+            map!!.setOnMapClickListener {
+                polyline!!.remove()
+                behavior.setState(BottomSheetBehavior.STATE_HIDDEN)
+            }
+        }*/
 
     private fun updateMapUI() {
         val mapLocation = view!!.findViewById<View>(R.id.map)
@@ -267,8 +265,7 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
         private const val CAMERA_ZOOM = 14
         private const val DEFAULT_CAMERA_ZOOM = 12
         private const val MAPS_API_KEY: String = BuildConfig.MAPS_API_KEY
-        private val TAG: String = Fragment::class.toString()
+        private val TAG: String = MapFragment::class.java.simpleName
         private val defaultLocation = LatLng(53.9193, 27.5768)
     }
-
 }

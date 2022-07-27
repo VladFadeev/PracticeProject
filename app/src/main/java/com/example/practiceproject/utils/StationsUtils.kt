@@ -33,7 +33,7 @@ object StationsUtils: PlacesUtils {
         val peek = bottomSheet.findViewById<TextView>(R.id.bottom_sheet_peek)
         for (station in stations) {
             val textView = TextView(layout.context)
-            textView.text = station.name
+            textView.text = station.getName()
             textView.setOnClickListener {
                 if (behavior.state == BottomSheetBehavior.STATE_HIDDEN) {
                     behavior.state = BottomSheetBehavior.STATE_COLLAPSED
@@ -80,7 +80,7 @@ object StationsUtils: PlacesUtils {
             val response = metroAPI.stations().execute()
             if (response.body() != null) {
                 result = response.body()!!
-                    .filter { station -> station.name.lowercase() != "error" }
+                    .filter { station -> station.getName().lowercase() != "error" }
                 result.stream().forEach { it.setType(PlaceType.Station) }
             }
         } else {

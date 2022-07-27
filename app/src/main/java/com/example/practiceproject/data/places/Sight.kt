@@ -3,21 +3,24 @@ package com.example.practiceproject.data.places
 import android.os.Parcel
 import android.os.Parcelable
 
-class Sight(
-    name: String,
-    latitude: Float,
-    longitude: Float) : Place(name, latitude, longitude, PlaceType.Sight) {
+class Sight(name: String,
+            latitude: Float,
+            longitude: Float,
+            isFavorite: Boolean = false) :
+    Place(0, name, latitude, longitude, isFavorite, PlaceType.Sight) {
+
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
         parcel.readFloat(),
-        parcel.readFloat()
-    ) {
-    }
+        parcel.readFloat(),
+        parcel.readBoolean()
+    )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(name)
-        parcel.writeFloat(latitude)
-        parcel.writeFloat(longitude)
+        parcel.writeString(getName())
+        parcel.writeFloat(getLatitude())
+        parcel.writeFloat(getLongitude())
+        parcel.writeBoolean(getIsFavorite())
     }
 
     override fun describeContents(): Int {
@@ -33,5 +36,4 @@ class Sight(
             return arrayOfNulls(size)
         }
     }
-
 }
