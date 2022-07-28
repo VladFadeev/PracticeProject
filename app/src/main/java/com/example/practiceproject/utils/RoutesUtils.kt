@@ -16,7 +16,7 @@ import java.util.concurrent.Executors
  */
 object RoutesUtils {
 
-    fun drawRoute(orig: LatLng, dest: LatLng, MAPS_KEY_API: String?): PolylineOptions? {
+    fun drawRoute(orig: LatLng, dest: LatLng, MAPS_KEY_API: String): PolylineOptions? {
         var result: PolylineOptions? = null
         val service = Executors.newFixedThreadPool(2)
         val res = service.submit(

@@ -18,7 +18,6 @@ object PermissionsUtils {
     private const val PERMISSIONS_REQUEST_INTERNET = 2
 
     fun getLocationPermission(activity: Activity) {
-        isLocationPermissionGranted = false
         if (ContextCompat.checkSelfPermission(
                 activity.applicationContext,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -35,7 +34,6 @@ object PermissionsUtils {
     }
 
     fun getInternetPermission(activity: Activity) {
-        isInternetPermissionGranted = false
         if (ContextCompat.checkSelfPermission(
                 activity.applicationContext,
                 Manifest.permission.INTERNET

@@ -1,5 +1,7 @@
 package com.example.practiceproject.ui.map
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
@@ -10,19 +12,17 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RelativeLayout
 import android.widget.SeekBar
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.example.practiceproject.*
+import com.example.practiceproject.BuildConfig
+import com.example.practiceproject.R
 import com.example.practiceproject.data.map.MapViewModel
 import com.example.practiceproject.data.map.MapViewModelFactory
 import com.example.practiceproject.ui.MainActivity
-import com.example.practiceproject.utils.CustomAnimations
-import com.example.practiceproject.utils.MyUserInteractionListener
-import com.example.practiceproject.utils.PermissionsUtils
-import com.example.practiceproject.utils.SeekBarInactivityHandler
+import com.example.practiceproject.utils.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapFragment
@@ -39,6 +39,11 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
     private val myLocationButtonMarginBottom = 30f
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private var lastKnownLocation: Location? = null
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        Log.d(this::class.java.simpleName, "Log")
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -59,13 +64,13 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
         val startDelay = resources.getInteger(R.integer.start_delay).toLong()
         val mapSupportFragment =
             childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this.context!!)
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity!!)
         if (mapViewModel == null) {
             mapViewModel = ViewModelProvider(
                 this,
                 MapViewModelFactory(mapSupportFragment!!)
             )[MapViewModel::class.java]
-            mapViewModel!!.getMap().observe(viewLifecycleOwner) { updateLocationUI() }
+            mapViewModel!!.getMap().observe(viewLifecycleOwner) { updateDeviceLocation() }
         }
         val seekbar = view.findViewById<SeekBar>(R.id.verticalSeekBar)
         seekbar.visibility = View.GONE
@@ -106,10 +111,11 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
 
     override fun onMapReady(p0: GoogleMap) {
         mapViewModel!!.getMap().value = p0
+        updateLocationUI()
         updateDeviceLocation()
     }
 
-    fun updateDeviceLocation() {
+    private fun updateDeviceLocation() {
         val executorService = Executors.newSingleThreadExecutor()
         executorService.submit { getDeviceLocation()}
         executorService.shutdown()
@@ -117,7 +123,8 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
 
     private fun getDeviceLocation() {
         try {
-            if (PermissionsUtils.isLocationPermissionGranted) {
+            if (ContextCompat.checkSelfPermission(activity!!.applicationContext,
+                    Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 val locationResult = fusedLocationProviderClient.lastLocation
                 locationResult.addOnCompleteListener(activity!!)
                 { task: Task<Location?> ->
@@ -133,6 +140,7 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
                                     ), CAMERA_ZOOM.toFloat()
                                 )
                             )
+                            //updateLocationUI()
                         }
                     } else {
                         Log.d(TAG, "Current location is null. Using defaults.")
@@ -156,14 +164,18 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
                     DEFAULT_CAMERA_ZOOM.toFloat()
                 )
         )
-        //mapViewModel!!.getMap().value!!.isMyLocationEnabled = PermissionsUtils.isLocationPermissionGranted
+        mapViewModel!!.getMap().value!!.isMyLocationEnabled = false
     }
 
     private fun updateLocationUI() {
-        mapViewModel!!.getMap().value!!.isMyLocationEnabled = PermissionsUtils.isLocationPermissionGranted
-        mapViewModel!!.getMap().value!!.uiSettings.isMyLocationButtonEnabled = PermissionsUtils.isLocationPermissionGranted
-        if (PermissionsUtils.isLocationPermissionGranted) {
+        if (ContextCompat.checkSelfPermission(activity!!.applicationContext,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mapViewModel!!.getMap().value!!.isMyLocationEnabled = true
+            mapViewModel!!.getMap().value!!.uiSettings.isMyLocationButtonEnabled = true
             updateMapUI()
+        } else {
+            mapViewModel!!.getMap().value!!.isMyLocationEnabled = false
+            mapViewModel!!.getMap().value!!.uiSettings.isMyLocationButtonEnabled = false
         }
     }
 
@@ -172,6 +184,15 @@ class MapFragment : Fragment(), MyUserInteractionListener, OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
         handler!!.resetHandler()
+        val args = arguments?.getFloatArray(DEST_KEY)
+        if (args != null) {
+            RoutesUtils.drawRoute(
+                LatLng(
+                    lastKnownLocation!!.latitude,
+                    lastKnownLocation!!.longitude
+                ), LatLng(args[0].toDouble(), args[1].toDouble()), MAPS_API_KEY
+            )
+        }
     }
 
     override fun onStop() {

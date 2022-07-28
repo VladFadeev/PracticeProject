@@ -1,8 +1,10 @@
 package com.example.practiceproject.ui
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
@@ -17,10 +19,13 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 
+val navController by lazy {
+    MainActivity.navController
+}
+
 class MainActivity : AppCompatActivity() {
     private var interactionListener: MyUserInteractionListener? = null
     private lateinit var bottomNavigationView: BottomNavigationView
-    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,8 +59,9 @@ class MainActivity : AppCompatActivity() {
                     if (!PermissionsUtils.isLocationPermissionGranted) {
                         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
                     } else {
-                        val mapFragment = supportFragmentManager.fragments[0].childFragmentManager.fragments[0] as MapFragment
-                        mapFragment.updateDeviceLocation()
+                        if (navController.currentDestination!!.id == R.id.menu_map) {
+                            navController.navigate(R.id.menu_map)
+                        }
                     }
                 }
                 Manifest.permission.INTERNET -> if (!PermissionsUtils.isInternetPermissionGranted) {
@@ -72,5 +78,9 @@ class MainActivity : AppCompatActivity() {
     override fun onUserInteraction() {
         super.onUserInteraction()
         interactionListener?.onUserInteraction()
+    }
+
+    companion object {
+        lateinit var navController: NavController
     }
 }
